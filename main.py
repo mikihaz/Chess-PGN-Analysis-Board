@@ -4,6 +4,11 @@
 # User can also go through each and every move of the match
 # User can also see the analysis of the match
 
+# command to create a virtual environment named chess-pgn
+# python3 -m venv chess-pgn | python -m venv chess-pgn
+# command to activate the virtual environment
+# source chess-pgn/bin/activate (Linux) | .\chess-pgn\Scripts\activate (Windows)
+
 # Importing the required libraries
 import streamlit as st
 import chess
@@ -51,4 +56,6 @@ st.markdown("### Enter the Engine Depth")
 
 # Setting the Slider for the Engine Depth
 engine_depth = st.slider("Select the Engine Depth", 1, 20, 10)
+
+
 
