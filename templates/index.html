@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess PGN Analysis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+
+        h1,
+        h2,
+        h3 {
+            color: #0069d9;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+        }
+
+        input[type="submit"] {
+            background-color: #0069d9;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .match-details {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f0f0f0;
+        }
+
+        .board {
+            margin-top: 20px;
+        }
+
+        .board img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Add CSS styles for highlighting */
+        .highlighted-square {
+            background-color: #ffc107;
+            /* You can choose any highlight color */
+        }
+
+        .center-board {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* CSS styles for the buttons */
+        .move-buttons {
+            margin-top: 20px;
+        }
+
+        .move-buttons button {
+            background-color: #0069d9;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .move-buttons button:hover {
+            background-color: #0056b3;
+        }
+
+        /* CSS for styling the current move display */
+        .move-display {
+            margin-top: 10px;
+            font-size: 18px;
+            /* Adjust the font size as needed */
+            color: #333;
+            /* Text color */
+            font-weight: bold;
+            /* Bold text */
+        }
+
+        /* CSS for styling the chessboard */
+        .board {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .board img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* CSS for highlighting the current move square */
+        .highlighted-square {
+            background-color: #ffc107;
+            /* You can choose any highlight color */
+        }
+
+    </style>
+    <script>
+        // JavaScript to scroll to the chessboard to the top of the screen
+        function scrollToBoard() {
+            // Get the current scroll position
+            const scrollPosition = document.getElementById('board').offsetTop;
+            window.scrollTo({ top: scrollPosition, behavior: 'auto' });            
+            // Store the scroll position in localStorage
+            localStorage.setItem('scrollPosition', scrollPosition);
+        }
+        // Add an event listener to the window to scroll to the stored position
+        window.addEventListener('load', function () {
+            const storedScrollPosition = localStorage.getItem('scrollPosition');
+            if (storedScrollPosition) {
+                window.scrollTo({ top: parseInt(storedScrollPosition), behavior: 'auto' });
+            }
+        });
+        // JavaScript to highlight the current move square from the PGN data - data-move
+        function highlightCurrentMove() {
+            // Get the current move number from the data-move attribute
+            const currentMove = document.getElementById('board').getAttribute('data-move');
+            // Get the square element with the data-move attribute equal to the current move number
+            const currentMoveSquare = document.querySelector(`[data-move="${currentMove}"]`);
+            // Add the highlighted-square class to the current move square
+            currentMoveSquare.classList.add('highlighted-square');
+        }
+        // Add an event listener to the window to highlight the current move square
+        window.addEventListener('load', highlightCurrentMove);
+    </script>
+
+
+</head>
+
+<body>
+    <div class="container">
+        <h1>Chess PGN Analysis</h1>
+        <h2>Web App to Analyze and Read a Chess Game from PGN Data</h2>
+
+        <h3>Upload the PGN Data</h3>
+        <form method="POST">
+            <textarea name="pgn_data" rows="10" placeholder="Paste your PGN data here">{{ pgn_data }}</textarea>
+            <br>
+            <input type="submit" value="Continue">
+            <!-- Add Board Reset Button -->
+            <input type="submit" name="reset_board" value="Reset Board">
+        </form>
+        {% if error_message %}
+        <p class="error">{{ error_message }}</p>
+        {% endif %}
+        {% if board_svg %}
+        <div class="board" id="board">
+            <h3>Chessboard</h3>
+            <!-- Display Event Name (Event Date)-->
+            <p class="move-display">{{ headers['Event'] }} ({{ headers['Date'] }})</p>
+            <!-- Display Player1 vs Player 2 -->
+            <p class="move-display">{{ headers['White'] }} vs {{ headers['Black'] }}</p>
+            <!-- Display current move as "Move X of Total Moves" -->
+            <p class="move-display">Move {{ current_move }} of {{ total_moves }}</p>
+            <!-- Display the player name who made the current move along with the move in red -->
+            <p class="move-display">{{ headers[current_move_player] }} plays {{ current_move_san }}</p>
+            {{ board_svg | safe }}
+            <!-- Add a space for the chessboard -->
+
+            <!-- Add buttons to move to the previous and next moves -->
+            <div class="move-buttons">
+                <form method="POST">
+                    <!-- Add pgn Data in the form -->
+                    <input type="hidden" name="pgn_data" value="{{ pgn_data }}">
+                    <input type="submit" name="prev_move" value="Previous Move" onclick="scrollToBoard()">
+                    <input type="submit" name="next_move" value="Next Move" onclick="scrollToBoard()">
+                </form>
+            </div>
+        </div>
+        {% endif %}
+        {% if headers %}
+        <div class="match-details">
+            <h3>Match Details</h3>
+            <table>
+                {% for key, value in headers.items() %}
+                <tr>
+                    <td style="font-weight: bold;">{{ key }}</td>
+                    <td>{{ value }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</body>
+
+</html>
